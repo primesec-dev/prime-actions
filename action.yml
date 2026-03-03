@@ -1,0 +1,30 @@
+name: 'PR Password Scanner'
+author: 'prime-actions'
+description: 'Scans PR diffs for password occurrences and comments on flagged lines'
+
+branding:
+  icon: 'shield'
+  color: 'red'
+
+inputs:
+  timeout:
+    description: 'Timeout in seconds for the action to complete'
+    required: false
+    default: '30'
+  token:
+    description: 'GitHub token for API access'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  total-lines:
+    description: 'Total number of added lines in the PR'
+  password-findings:
+    description: 'Number of password occurrences found in added lines'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    INPUT_TIMEOUT: ${{ inputs.timeout }}
+    INPUT_TOKEN: ${{ inputs.token }}
