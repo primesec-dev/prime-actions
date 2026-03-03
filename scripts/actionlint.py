@@ -107,9 +107,7 @@ def lint_triggers(workflow: dict[str, object], file: str) -> list[LintError]:
     return errors
 
 
-def lint_permissions(
-    perms: object, file: str, location: str
-) -> list[LintError]:
+def lint_permissions(perms: object, file: str, location: str) -> list[LintError]:
     errors: list[LintError] = []
     if isinstance(perms, dict):
         for key, value in perms.items():
@@ -176,15 +174,11 @@ def _lint_job_needs_outputs(
     for match in NEEDS_OUTPUT_RE.finditer(job_str):
         ref_job = match.group(1)
         if ref_job not in job_ids:
-            errors.append(
-                LintError(file, f"references outputs from unknown job '{ref_job}'", loc)
-            )
+            errors.append(LintError(file, f"references outputs from unknown job '{ref_job}'", loc))
     return errors
 
 
-def _lint_steps(
-    job_def: dict[str, object], file: str, job_loc: str
-) -> list[LintError]:
+def _lint_steps(job_def: dict[str, object], file: str, job_loc: str) -> list[LintError]:
     errors: list[LintError] = []
     steps = job_def.get("steps")
     if steps is None:
