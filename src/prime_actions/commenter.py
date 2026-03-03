@@ -38,7 +38,7 @@ def post_review_comments(
 
 def build_summary(total_lines: int, findings_count: int) -> str:
     return (
-        "## PR Password Scanner Summary\n\n"
+        "## PR Prime Password Scanner Summary\n\n"
         "| Metric | Count |\n"
         "| --- | --- |\n"
         f"| Total added lines in PR | {total_lines} |\n"
