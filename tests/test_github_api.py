@@ -4,7 +4,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from prime_actions.github_api import create_pr_comment, create_review_comment, list_pr_files
+from prime_actions.github_api import (
+    InsufficientPermissionsError,
+    create_pr_comment,
+    create_review_comment,
+    list_pr_files,
+    verify_pr_write_permission,
+)
 from prime_actions.models import PRContext
 
 
@@ -66,6 +72,30 @@ class TestListPRFiles:
 
         files = list_pr_files(pr_context)
         assert files == []
+
+
+class TestVerifyPrWritePermission:
+    @patch("prime_actions.github_api.requests.post")
+    def test_raises_on_403(self, mock_post: MagicMock, pr_context: PRContext) -> None:
+        mock_response = MagicMock()
+        mock_response.status_code = 403
+        mock_post.return_value = mock_response
+
+        with pytest.raises(InsufficientPermissionsError, match="pull-requests: write"):
+            verify_pr_write_permission(pr_context)
+
+        mock_post.assert_called_once()
+        call_kwargs = mock_post.call_args
+        assert "/pulls/42/comments" in call_kwargs.args[0]
+        assert call_kwargs.kwargs["json"] == {}
+
+    @patch("prime_actions.github_api.requests.post")
+    def test_passes_on_422(self, mock_post: MagicMock, pr_context: PRContext) -> None:
+        mock_response = MagicMock()
+        mock_response.status_code = 422
+        mock_post.return_value = mock_response
+
+        verify_pr_write_permission(pr_context)
 
 
 class TestCreateReviewComment:
