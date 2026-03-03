@@ -20,7 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: "3.13"
 
       - name: Install uv
         run: pip install uv
@@ -53,7 +53,6 @@ jobs:
   test-action:
     name: Test Action
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     permissions:
       contents: read
       pull-requests: write
@@ -65,7 +64,7 @@ jobs:
         id: scanner
         uses: ./
         with:
-          timeout: '30'
+          timeout: "30"
 
       - name: Check outputs
         run: |

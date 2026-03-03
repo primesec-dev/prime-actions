@@ -68,6 +68,33 @@ jobs:
 5. Posts an inline review comment on each flagged line
 6. Posts a summary comment with total line count and findings
 
+## Releasing
+
+This project uses [semantic versioning](https://semver.org/). The release workflow (`.github/workflows/release.yml`) runs automatically when a GitHub Release is published:
+
+1. **Validates** the code (ruff, mypy, pytest)
+2. **Builds and pushes** a Docker image to `ghcr.io/<owner>/prime-actions` with semver tags
+3. **Updates the major version tag** (e.g. `v1`) to point to the latest release
+
+### Creating a Release
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Then create a GitHub Release from the tag. The workflow will automatically create/update the `v1` tag so users referencing `@v1` always get the latest patch.
+
+### Using the Pre-built Docker Image
+
+For faster action startup (skips Docker build), users can reference the GHCR image directly. After publishing, update `action.yml` to point to the pre-built image:
+
+```yaml
+runs:
+  using: 'docker'
+  image: 'docker://ghcr.io/<owner>/prime-actions:v1'
+```
+
 ## Development
 
 ### Prerequisites
