@@ -38,14 +38,14 @@ def list_pr_files(context: PRContext) -> list[PRFile]:
         if not data:
             break
 
-        for item in data:
-            files.append(
-                PRFile(
-                    filename=item["filename"],
-                    patch=item.get("patch"),
-                    status=item["status"],
-                )
+        files.extend(
+            PRFile(
+                filename=item["filename"],
+                patch=item.get("patch"),
+                status=item["status"],
             )
+            for item in data
+        )
 
         if len(data) < _PER_PAGE:
             break
