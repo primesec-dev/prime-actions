@@ -129,6 +129,45 @@ def create_review_comment(
     LOGGER.info("Posted review comment on %s:%d", file_path, line)
 
 
+def list_pr_comments(context: PRContext) -> list[dict[str, Any]]:
+    url = f"{_API_BASE}/repos/{context.owner}/{context.repo}/issues/{context.pr_number}/comments"
+    comments: list[dict[str, Any]] = []
+    page = 1
+
+    while True:
+        response = requests.get(
+            url,
+            headers=_headers(context.token),
+            params={"per_page": _PER_PAGE, "page": page},
+            timeout=10,
+        )
+        response.raise_for_status()
+        data: list[dict[str, Any]] = response.json()
+        if not data:
+            break
+
+        comments.extend(data)
+
+        if len(data) < _PER_PAGE:
+            break
+        page += 1
+
+    LOGGER.info("Listed %d issue comments from PR #%d", len(comments), context.pr_number)
+    return comments
+
+
+def update_pr_comment(context: PRContext, comment_id: int, body: str) -> None:
+    url = f"{_API_BASE}/repos/{context.owner}/{context.repo}/issues/comments/{comment_id}"
+    response = requests.patch(
+        url,
+        headers=_headers(context.token),
+        json={"body": body},
+        timeout=10,
+    )
+    response.raise_for_status()
+    LOGGER.info("Updated comment %d on PR #%d", comment_id, context.pr_number)
+
+
 def create_pr_comment(context: PRContext, body: str) -> None:
     url = f"{_API_BASE}/repos/{context.owner}/{context.repo}/issues/{context.pr_number}/comments"
     response = requests.post(
