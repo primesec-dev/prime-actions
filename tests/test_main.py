@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from prime_actions.github_api import InsufficientPermissionsError
 from prime_actions.main import _build_context, _get_input, _write_output, run
 from prime_actions.models import PRFile
 
@@ -124,6 +125,7 @@ def _make_mock_pr_files() -> list[Any]:
 
 
 class TestRun:
+    @patch("prime_actions.main.verify_pr_write_permission")
     @patch("prime_actions.main.post_summary")
     @patch("prime_actions.main.post_review_comments")
     @patch("prime_actions.main.list_pr_files")
@@ -132,6 +134,7 @@ class TestRun:
         mock_list_files: MagicMock,
         mock_post_comments: MagicMock,
         mock_post_summary: MagicMock,
+        mock_verify: MagicMock,
         github_env: dict[str, str],
     ) -> None:
         mock_list_files.return_value = _make_mock_pr_files()
@@ -140,6 +143,7 @@ class TestRun:
         with patch.dict(os.environ, github_env, clear=True):
             run()
 
+        mock_verify.assert_called_once()
         mock_list_files.assert_called_once()
         mock_post_comments.assert_called_once()
         mock_post_summary.assert_called_once()
@@ -152,6 +156,7 @@ class TestRun:
         assert "total-lines=4" in output_content
         assert "password-findings=1" in output_content
 
+    @patch("prime_actions.main.verify_pr_write_permission")
     @patch("prime_actions.main.post_summary")
     @patch("prime_actions.main.post_review_comments")
     @patch("prime_actions.main.list_pr_files")
@@ -160,6 +165,7 @@ class TestRun:
         mock_list_files: MagicMock,
         mock_post_comments: MagicMock,
         mock_post_summary: MagicMock,
+        mock_verify: MagicMock,
         github_env: dict[str, str],
     ) -> None:
         mock_list_files.return_value = [
@@ -169,6 +175,7 @@ class TestRun:
         with patch.dict(os.environ, github_env, clear=True):
             run()
 
+        mock_verify.assert_called_once()
         mock_post_comments.assert_not_called()
         mock_post_summary.assert_called_once()
 
@@ -176,3 +183,16 @@ class TestRun:
         github_env["INPUT_TIMEOUT"] = "not_a_number"
         with patch.dict(os.environ, github_env, clear=True), pytest.raises(SystemExit):
             run()
+
+    @patch("prime_actions.main.verify_pr_write_permission")
+    def test_run_exits_on_insufficient_permissions(
+        self,
+        mock_verify: MagicMock,
+        github_env: dict[str, str],
+    ) -> None:
+        mock_verify.side_effect = InsufficientPermissionsError("missing pull-requests: write")
+
+        with patch.dict(os.environ, github_env, clear=True), pytest.raises(SystemExit):
+            run()
+
+        mock_verify.assert_called_once()

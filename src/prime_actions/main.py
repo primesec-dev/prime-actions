@@ -9,7 +9,11 @@ from pathlib import Path
 from typing import Any
 
 from prime_actions.commenter import post_review_comments, post_summary
-from prime_actions.github_api import list_pr_files
+from prime_actions.github_api import (
+    InsufficientPermissionsError,
+    list_pr_files,
+    verify_pr_write_permission,
+)
 from prime_actions.models import PRContext
 from prime_actions.scanner import count_added_lines, scan_files
 
@@ -92,6 +96,8 @@ def run() -> None:
     try:
         context = _build_context()
 
+        verify_pr_write_permission(context)
+
         LOGGER.info("Scanning PR #%d in %s/%s", context.pr_number, context.owner, context.repo)
 
         pr_files = list_pr_files(context)
@@ -117,6 +123,9 @@ def run() -> None:
 
     except TimeoutError:
         LOGGER.exception("Action timed out after %d seconds", timeout)
+        sys.exit(1)
+    except InsufficientPermissionsError:
+        LOGGER.exception("Action failed due to insufficient permissions")
         sys.exit(1)
     except Exception:
         LOGGER.exception("Action failed")

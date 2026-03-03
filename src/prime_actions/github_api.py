@@ -12,6 +12,29 @@ LOGGER = logging.getLogger(__name__)
 _API_BASE = "https://api.github.com"
 _PER_PAGE = 100
 
+_PERMISSIONS_ERROR_MSG = (
+    "The provided GitHub token does not have 'pull-requests: write' permission. "
+    "Please add the following to your workflow file:\n\n"
+    "permissions:\n"
+    "  pull-requests: write"
+)
+
+
+class InsufficientPermissionsError(Exception):
+    pass
+
+
+def verify_pr_write_permission(context: PRContext) -> None:
+    url = f"{_API_BASE}/repos/{context.owner}/{context.repo}/pulls/{context.pr_number}/comments"
+    response = requests.post(
+        url,
+        headers=_headers(context.token),
+        json={},
+        timeout=10,
+    )
+    if response.status_code == 403:
+        raise InsufficientPermissionsError(_PERMISSIONS_ERROR_MSG)
+
 
 def _headers(token: str) -> dict[str, str]:
     return {
