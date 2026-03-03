@@ -92,9 +92,7 @@ def run() -> None:
     try:
         context = _build_context()
 
-        LOGGER.info(
-            "Scanning PR #%d in %s/%s", context.pr_number, context.owner, context.repo
-        )
+        LOGGER.info("Scanning PR #%d in %s/%s", context.pr_number, context.owner, context.repo)
 
         pr_files = list_pr_files(context)
         LOGGER.info("Found %d files in PR", len(pr_files))

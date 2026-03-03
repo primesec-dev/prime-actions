@@ -40,7 +40,7 @@ PATCH_NO_PASSWORD = """\
 PATCH_PASSWORD_IN_CONTEXT_ONLY = """\
 @@ -5,7 +5,7 @@
  import os
- 
+
  DB_HOST = "localhost"
 -DB_PASSWORD = "old_secret"
 +DB_SECRET = "new_secret"
@@ -50,10 +50,10 @@ PATCH_MULTIPLE_HUNKS = """\
 @@ -1,3 +1,4 @@
  import os
 +import sys
- 
+
  DB_HOST = "localhost"
 @@ -10,3 +11,4 @@
- 
+
  def connect():
      pass
 +    password = get_password()"""
@@ -87,9 +87,7 @@ def pr_file_binary() -> PRFile:
 
 @pytest.fixture()
 def pr_file_password_in_context_only() -> PRFile:
-    return PRFile(
-        filename="config.py", patch=PATCH_PASSWORD_IN_CONTEXT_ONLY, status="modified"
-    )
+    return PRFile(filename="config.py", patch=PATCH_PASSWORD_IN_CONTEXT_ONLY, status="modified")
 
 
 @pytest.fixture()

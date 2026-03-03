@@ -8,7 +8,7 @@ from prime_actions.commenter import (
     post_review_comments,
     post_summary,
 )
-from prime_actions.models import PRContext, PasswordFinding
+from prime_actions.models import PasswordFinding, PRContext
 
 
 class TestPostReviewComments:

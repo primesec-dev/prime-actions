@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from prime_actions.models import PRFile, PasswordFinding
+from prime_actions.models import PasswordFinding, PRFile
 
 _HUNK_HEADER_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
 _PASSWORD_RE = re.compile(r"password", re.IGNORECASE)

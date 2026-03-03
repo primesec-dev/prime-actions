@@ -61,10 +61,7 @@ def create_review_comment(
     line: int,
     body: str,
 ) -> None:
-    url = (
-        f"{_API_BASE}/repos/{context.owner}/{context.repo}"
-        f"/pulls/{context.pr_number}/comments"
-    )
+    url = f"{_API_BASE}/repos/{context.owner}/{context.repo}/pulls/{context.pr_number}/comments"
     payload = {
         "body": body,
         "commit_id": context.head_sha,
@@ -83,10 +80,7 @@ def create_review_comment(
 
 
 def create_pr_comment(context: PRContext, body: str) -> None:
-    url = (
-        f"{_API_BASE}/repos/{context.owner}/{context.repo}"
-        f"/issues/{context.pr_number}/comments"
-    )
+    url = f"{_API_BASE}/repos/{context.owner}/{context.repo}/issues/{context.pr_number}/comments"
     response = requests.post(
         url,
         headers=_headers(context.token),

@@ -21,9 +21,7 @@ def pr_context() -> PRContext:
 
 class TestListPRFiles:
     @patch("prime_actions.github_api.requests.get")
-    def test_lists_files_single_page(
-        self, mock_get: MagicMock, pr_context: PRContext
-    ) -> None:
+    def test_lists_files_single_page(self, mock_get: MagicMock, pr_context: PRContext) -> None:
         mock_response = MagicMock()
         mock_response.json.return_value = [
             {"filename": "a.py", "patch": "@@ +1 @@\n+x=1", "status": "added"},
@@ -41,9 +39,7 @@ class TestListPRFiles:
         assert files[1].patch is None
 
     @patch("prime_actions.github_api.requests.get")
-    def test_handles_pagination(
-        self, mock_get: MagicMock, pr_context: PRContext
-    ) -> None:
+    def test_handles_pagination(self, mock_get: MagicMock, pr_context: PRContext) -> None:
         page1 = [{"filename": f"f{i}.py", "status": "added"} for i in range(100)]
         page2 = [{"filename": "last.py", "status": "added"}]
 
@@ -74,9 +70,7 @@ class TestListPRFiles:
 
 class TestCreateReviewComment:
     @patch("prime_actions.github_api.requests.post")
-    def test_posts_correct_payload(
-        self, mock_post: MagicMock, pr_context: PRContext
-    ) -> None:
+    def test_posts_correct_payload(self, mock_post: MagicMock, pr_context: PRContext) -> None:
         mock_response = MagicMock()
         mock_response.raise_for_status = MagicMock()
         mock_post.return_value = mock_response
@@ -96,9 +90,7 @@ class TestCreateReviewComment:
 
 class TestCreatePRComment:
     @patch("prime_actions.github_api.requests.post")
-    def test_posts_summary_comment(
-        self, mock_post: MagicMock, pr_context: PRContext
-    ) -> None:
+    def test_posts_summary_comment(self, mock_post: MagicMock, pr_context: PRContext) -> None:
         mock_response = MagicMock()
         mock_response.raise_for_status = MagicMock()
         mock_post.return_value = mock_response

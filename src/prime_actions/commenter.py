@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from prime_actions.github_api import create_pr_comment, create_review_comment
-from prime_actions.models import PRContext, PasswordFinding
+
+if TYPE_CHECKING:
+    from prime_actions.models import PasswordFinding, PRContext
 
 LOGGER = logging.getLogger(__name__)
 

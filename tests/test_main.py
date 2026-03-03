@@ -112,7 +112,7 @@ def _make_mock_pr_files() -> list[Any]:
     return [
         PRFile(
             filename="config.py",
-            patch="@@ -0,0 +1,3 @@\n+import os\n+DB_PASSWORD = \"secret\"\n+PORT = 5432",
+            patch='@@ -0,0 +1,3 @@\n+import os\n+DB_PASSWORD = "secret"\n+PORT = 5432',
             status="added",
         ),
         PRFile(
