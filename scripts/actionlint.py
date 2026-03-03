@@ -82,7 +82,10 @@ class LintError:
 
 def lint_triggers(workflow: dict[str, object], file: str) -> list[LintError]:
     errors: list[LintError] = []
-    on = workflow.get("on") or workflow.get(True)
+    on: object = workflow.get("on")
+    if on is None:
+        raw: dict[object, object] = workflow  # type: ignore[assignment]
+        on = raw.get(True)
     if on is None:
         errors.append(LintError(file, "missing required key 'on'"))
         return errors
