@@ -8,8 +8,10 @@ from prime_actions.github_api import (
     InsufficientPermissionsError,
     create_pr_comment,
     create_review_comment,
+    list_pr_comments,
     list_pr_files,
     list_review_comments,
+    update_pr_comment,
     verify_pr_write_permission,
 )
 from prime_actions.models import PRContext
@@ -181,3 +183,66 @@ class TestCreatePRComment:
         call_kwargs = mock_post.call_args
         assert "/issues/42/comments" in call_kwargs.args[0]
         assert call_kwargs.kwargs["json"]["body"] == "Summary text"
+
+
+class TestListPRComments:
+    @patch("prime_actions.github_api.requests.get")
+    def test_lists_comments_single_page(self, mock_get: MagicMock, pr_context: PRContext) -> None:
+        mock_response = MagicMock()
+        mock_response.json.return_value = [
+            {"id": 1, "body": "hello"},
+            {"id": 2, "body": "world"},
+        ]
+        mock_response.raise_for_status = MagicMock()
+        mock_get.return_value = mock_response
+
+        comments = list_pr_comments(pr_context)
+
+        assert len(comments) == 2
+        assert comments[0]["body"] == "hello"
+        mock_get.assert_called_once()
+        assert "/issues/42/comments" in mock_get.call_args.args[0]
+
+    @patch("prime_actions.github_api.requests.get")
+    def test_handles_pagination(self, mock_get: MagicMock, pr_context: PRContext) -> None:
+        page1 = [{"id": i, "body": "x"} for i in range(100)]
+        page2 = [{"id": 999, "body": "last"}]
+
+        resp1 = MagicMock()
+        resp1.json.return_value = page1
+        resp1.raise_for_status = MagicMock()
+
+        resp2 = MagicMock()
+        resp2.json.return_value = page2
+        resp2.raise_for_status = MagicMock()
+
+        mock_get.side_effect = [resp1, resp2]
+
+        comments = list_pr_comments(pr_context)
+        assert len(comments) == 101
+        assert mock_get.call_count == 2
+
+    @patch("prime_actions.github_api.requests.get")
+    def test_empty_comments(self, mock_get: MagicMock, pr_context: PRContext) -> None:
+        mock_response = MagicMock()
+        mock_response.json.return_value = []
+        mock_response.raise_for_status = MagicMock()
+        mock_get.return_value = mock_response
+
+        comments = list_pr_comments(pr_context)
+        assert comments == []
+
+
+class TestUpdatePRComment:
+    @patch("prime_actions.github_api.requests.patch")
+    def test_sends_correct_payload(self, mock_patch: MagicMock, pr_context: PRContext) -> None:
+        mock_response = MagicMock()
+        mock_response.raise_for_status = MagicMock()
+        mock_patch.return_value = mock_response
+
+        update_pr_comment(pr_context, comment_id=999, body="Updated body")
+
+        mock_patch.assert_called_once()
+        call_kwargs = mock_patch.call_args
+        assert "/issues/comments/999" in call_kwargs.args[0]
+        assert call_kwargs.kwargs["json"]["body"] == "Updated body"

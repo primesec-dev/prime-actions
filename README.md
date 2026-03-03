@@ -35,7 +35,7 @@ jobs:
 
       - name: Scan for passwords
         id: scanner
-        uses: primesec/prime-actions@v1
+        uses: primesec-dev/prime-actions@v1
         with:
           timeout: '30'
 

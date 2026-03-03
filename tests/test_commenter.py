@@ -3,6 +3,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 from prime_actions.commenter import (
+    _SUMMARY_MARKER,
     REVIEW_COMMENT_BODY,
     build_summary,
     post_review_comments,
@@ -106,6 +107,23 @@ class TestPostReviewComments:
         mock_create.assert_not_called()
 
     @patch("prime_actions.commenter.list_review_comments")
+    def test_skips_outdated_comments_using_original_line(
+        self, mock_list: MagicMock, pr_context: PRContext
+    ) -> None:
+        mock_list.return_value = [
+            {"path": "config.py", "line": None, "original_line": 4, "body": REVIEW_COMMENT_BODY},
+        ]
+        findings = [
+            PasswordFinding(file_path="config.py", line=4, content='DB_PASSWORD = "secret"'),
+        ]
+
+        with patch("prime_actions.commenter.create_review_comment") as mock_create:
+            posted = post_review_comments(pr_context, findings)
+
+        assert posted == 0
+        mock_create.assert_not_called()
+
+    @patch("prime_actions.commenter.list_review_comments")
     def test_ignores_comments_with_different_body(
         self, mock_list: MagicMock, pr_context: PRContext
     ) -> None:
@@ -131,6 +149,10 @@ class TestBuildSummary:
         assert "**Prime**" in summary
         assert "Password Scanner Summary" in summary
 
+    def test_summary_contains_marker(self) -> None:
+        summary = build_summary(total_lines=10, findings_count=1)
+        assert _SUMMARY_MARKER in summary
+
     def test_summary_is_markdown_table(self) -> None:
         summary = build_summary(total_lines=0, findings_count=0)
         assert "| Metric | Count |" in summary
@@ -139,7 +161,8 @@ class TestBuildSummary:
 
 
 class TestPostSummary:
-    def test_posts_summary_comment(self, pr_context: PRContext) -> None:
+    @patch("prime_actions.commenter.list_pr_comments", return_value=[])
+    def test_posts_summary_comment(self, _mock_list: MagicMock, pr_context: PRContext) -> None:
         with patch("prime_actions.commenter.create_pr_comment") as mock_create:
             post_summary(pr_context, total_lines=100, findings_count=5)
 
@@ -149,7 +172,28 @@ class TestPostSummary:
         assert "100" in call_kwargs.kwargs["body"]
         assert "5" in call_kwargs.kwargs["body"]
 
-    def test_handles_api_error_gracefully(self, pr_context: PRContext) -> None:
+    @patch("prime_actions.commenter.list_pr_comments", return_value=[])
+    def test_handles_api_error_gracefully(
+        self, _mock_list: MagicMock, pr_context: PRContext
+    ) -> None:
         with patch("prime_actions.commenter.create_pr_comment") as mock_create:
             mock_create.side_effect = Exception("API error")
             post_summary(pr_context, total_lines=100, findings_count=5)
+
+    @patch("prime_actions.commenter.list_pr_comments")
+    def test_updates_existing_summary_instead_of_creating(
+        self, mock_list: MagicMock, pr_context: PRContext
+    ) -> None:
+        mock_list.return_value = [
+            {"id": 999, "body": f"{_SUMMARY_MARKER}\nold summary content"},
+        ]
+        with (
+            patch("prime_actions.commenter.update_pr_comment") as mock_update,
+            patch("prime_actions.commenter.create_pr_comment") as mock_create,
+        ):
+            post_summary(pr_context, total_lines=200, findings_count=7)
+
+        mock_update.assert_called_once_with(pr_context, 999, mock_update.call_args.args[2])
+        assert "200" in mock_update.call_args.args[2]
+        assert "7" in mock_update.call_args.args[2]
+        mock_create.assert_not_called()
