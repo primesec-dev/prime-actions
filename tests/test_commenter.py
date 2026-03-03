@@ -50,9 +50,7 @@ class TestPostReviewComments:
         mock_create.assert_not_called()
 
     @patch("prime_actions.commenter.list_review_comments", return_value=[])
-    def test_continues_on_api_error(
-        self, _mock_list: MagicMock, pr_context: PRContext
-    ) -> None:
+    def test_continues_on_api_error(self, _mock_list: MagicMock, pr_context: PRContext) -> None:
         findings = [
             PasswordFinding(file_path="a.py", line=1, content="password"),
             PasswordFinding(file_path="b.py", line=2, content="password"),
@@ -130,7 +128,8 @@ class TestBuildSummary:
         summary = build_summary(total_lines=150, findings_count=3)
         assert "150" in summary
         assert "3" in summary
-        assert "PR Password Scanner Summary" in summary
+        assert "**Prime**" in summary
+        assert "Password Scanner Summary" in summary
 
     def test_summary_is_markdown_table(self) -> None:
         summary = build_summary(total_lines=0, findings_count=0)

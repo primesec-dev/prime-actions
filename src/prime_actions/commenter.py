@@ -14,7 +14,12 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
-REVIEW_COMMENT_BODY = "Remove it please \U0001f604"
+_LOGO_URL = (
+    "https://raw.githubusercontent.com/primesec-dev/prime-actions/main/assets/prime-logo.png"
+)
+_BRAND = f'<img src="{_LOGO_URL}" width="16" height="16" align="absmiddle"> **Prime**'
+
+REVIEW_COMMENT_BODY = f"{_BRAND} \u2014 Remove it please \U0001f604"
 
 
 def _already_commented_locations(
@@ -63,7 +68,7 @@ def post_review_comments(
 
 def build_summary(total_lines: int, findings_count: int) -> str:
     return (
-        "## PR Prime Password Scanner Summary\n\n"
+        f"## {_BRAND} | Password Scanner Summary\n\n"
         "| Metric | Count |\n"
         "| --- | --- |\n"
         f"| Total added lines in PR | {total_lines} |\n"
