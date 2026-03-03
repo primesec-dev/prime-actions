@@ -78,6 +78,33 @@ def list_pr_files(context: PRContext) -> list[PRFile]:
     return files
 
 
+def list_review_comments(context: PRContext) -> list[dict[str, Any]]:
+    url = f"{_API_BASE}/repos/{context.owner}/{context.repo}/pulls/{context.pr_number}/comments"
+    comments: list[dict[str, Any]] = []
+    page = 1
+
+    while True:
+        response = requests.get(
+            url,
+            headers=_headers(context.token),
+            params={"per_page": _PER_PAGE, "page": page},
+            timeout=10,
+        )
+        response.raise_for_status()
+        data: list[dict[str, Any]] = response.json()
+        if not data:
+            break
+
+        comments.extend(data)
+
+        if len(data) < _PER_PAGE:
+            break
+        page += 1
+
+    LOGGER.info("Listed %d review comments from PR #%d", len(comments), context.pr_number)
+    return comments
+
+
 def create_review_comment(
     context: PRContext,
     file_path: str,

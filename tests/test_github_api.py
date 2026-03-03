@@ -9,6 +9,7 @@ from prime_actions.github_api import (
     create_pr_comment,
     create_review_comment,
     list_pr_files,
+    list_review_comments,
     verify_pr_write_permission,
 )
 from prime_actions.models import PRContext
@@ -96,6 +97,55 @@ class TestVerifyPrWritePermission:
         mock_post.return_value = mock_response
 
         verify_pr_write_permission(pr_context)
+
+
+class TestListReviewComments:
+    @patch("prime_actions.github_api.requests.get")
+    def test_lists_comments_single_page(self, mock_get: MagicMock, pr_context: PRContext) -> None:
+        mock_response = MagicMock()
+        mock_response.json.return_value = [
+            {"path": "config.py", "line": 4, "body": "Remove it please"},
+            {"path": "auth.py", "line": 10, "body": "Another comment"},
+        ]
+        mock_response.raise_for_status = MagicMock()
+        mock_get.return_value = mock_response
+
+        comments = list_review_comments(pr_context)
+
+        assert len(comments) == 2
+        assert comments[0]["path"] == "config.py"
+        assert comments[1]["body"] == "Another comment"
+        mock_get.assert_called_once()
+        assert "/pulls/42/comments" in mock_get.call_args.args[0]
+
+    @patch("prime_actions.github_api.requests.get")
+    def test_handles_pagination(self, mock_get: MagicMock, pr_context: PRContext) -> None:
+        page1 = [{"path": f"f{i}.py", "line": i, "body": "x"} for i in range(100)]
+        page2 = [{"path": "last.py", "line": 1, "body": "x"}]
+
+        resp1 = MagicMock()
+        resp1.json.return_value = page1
+        resp1.raise_for_status = MagicMock()
+
+        resp2 = MagicMock()
+        resp2.json.return_value = page2
+        resp2.raise_for_status = MagicMock()
+
+        mock_get.side_effect = [resp1, resp2]
+
+        comments = list_review_comments(pr_context)
+        assert len(comments) == 101
+        assert mock_get.call_count == 2
+
+    @patch("prime_actions.github_api.requests.get")
+    def test_empty_comments(self, mock_get: MagicMock, pr_context: PRContext) -> None:
+        mock_response = MagicMock()
+        mock_response.json.return_value = []
+        mock_response.raise_for_status = MagicMock()
+        mock_get.return_value = mock_response
+
+        comments = list_review_comments(pr_context)
+        assert comments == []
 
 
 class TestCreateReviewComment:
