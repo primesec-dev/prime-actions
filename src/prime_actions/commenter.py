@@ -14,7 +14,9 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
-_LOGO_URL = "https://raw.githubusercontent.com/primesec-dev/prime-actions/main/assets/prime-logo.png"
+_LOGO_URL = (
+    "https://raw.githubusercontent.com/primesec-dev/prime-actions/main/assets/prime-logo.png"
+)
 _BRAND = f'<img src="{_LOGO_URL}" width="16" height="16" align="absmiddle"> **Prime**'
 
 REVIEW_COMMENT_BODY = f"{_BRAND} \u2014 Remove it please \U0001f604"
